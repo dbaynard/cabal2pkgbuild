@@ -49,7 +49,6 @@ bifunctors
 generic-deriving
 profunctors
 reflection
-distributive
 MonadCatchIO-transformers
 lens
 linear
@@ -65,12 +64,32 @@ As the packages here are added in order, you should put them so that the depende
 The `lens` package, for example, has a ton of dependencies and all of these are listed before `lens` itself.
 It takes some trial and error to get this right (the `initdb-sync` mode will output failures), but it should not be too difficult.
 
+Optionally, create a file listing all Hackage packages in the first file that should be installed as dependencies (the `<dependencies_file>` file).
+
+```
+bindings-DSL
+bindings-GLFW
+transformers-compat
+contravariant
+distributive
+comonad
+semigroupoids
+bifunctors
+profunctors
+reflection
+```
+
 We now run the script 3 times:
 
 ```
 /path/to/cabal2pkgbuild.sh <hackage_packages_file> initdb-sync
 /path/to/cabal2pkgbuild.sh <hackage_packages_file> pkgbuild
 /path/to/cabal2pkgbuild.sh <hackage_packages_file> makepkg
+```
+
+Optionally, that last command can include `dependencies file`:
+```
+/path/to/cabal2pkgbuild.sh <hackage_packages_file> makepkg <dependencies_file>
 ```
 
 The `initdb-sync` mode initializes the cblrepo database, populating it with all of the system Haskell packages already installed on your computer.[^symlink]

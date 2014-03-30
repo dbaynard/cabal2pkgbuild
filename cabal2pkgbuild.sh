@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
-# Usage: ./cabal2pkgbuild.sh <HACKAGE_PACKAGES_FILE> <MODE>
-usage="Usage: ./cabal2pkgbuild.sh <HACKAGE_PACKAGES_FILE> <MODE>"
+# Usage: ./cabal2pkgbuild.sh <HACKAGE_PACKAGES_FILE> <MODE> [<DEPENDENCIES_FILE>]
+usage="Usage: ./cabal2pkgbuild.sh <HACKAGE_PACKAGES_FILE> <MODE> [<DEPENDENCIES_FILE>]"
 
 # Exit immediately if any errors are found
 setopt errexit
@@ -26,6 +26,18 @@ hackage_packages_file=($(<$1))
 hackage_lowercased=($hackage_packages_file:l)
 
 mode=$2
+
+if [[ -z $3 ]]; then
+	echo "No dependency file submitted"
+	dependencies_file=()
+	dependencies_lowercased=()
+elif [[ ! -f $3 ]]; then
+	echo "\`$3' does not exist or is not a regular file"
+	exit 1
+else;
+	dependencies_file=($(<$3))
+	dependencies_lowercased=($dependencies:l)
+fi
 
 case $mode in
 	### Remove any old cblrepo.db file. ###
@@ -153,8 +165,13 @@ case $mode in
 		if (( $install_pkg )); then
 			cd $hpkg
 			echo $hpkg
+			install_command=(sudo pacman -U $hpkg-*.pkg.tar.xz)
+			# If package is a dependency, install as a dependency
+			if [[ ${dependencies_lowercase[(r)$pkg]} -le ${#dependencies_lowercase} ]]; then
+				install_command+=(--asdeps)
+			fi
 			makepkg -sf
-			sudo pacman -U $hpkg-*.pkg.tar.xz
+			eval $install_command
 			cd ..
 			echo
 			echo "  Finished making/installing package \`$hpkg'"
